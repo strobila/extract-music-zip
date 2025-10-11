@@ -20,13 +20,17 @@ def get_track_title(mp3_file: str) -> str:
     return title_str
 
 
+def mp3_has_lyric(mp3_file: str) -> bool:
+    lyric_str = get_lyrics(mp3_file)
+    return bool(lyric_str and lyric_str.strip())
+
+
 # Check if any track in 'album_dir' have lyrics
 def any_mp3_has_lyric(album_dir: str) -> bool:
     mp3_files = glob.glob(os.path.join(album_dir, '*.mp3'))
     
     for filepath in mp3_files:
-        lyric_str = get_lyrics(filepath)
-        if lyric_str:
+        if mp3_has_lyric(filepath):
             return True
     return False
 

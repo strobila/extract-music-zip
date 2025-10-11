@@ -5,7 +5,7 @@ import glob
 import zipfile
 import shutil
 
-from extract_lyrics import any_mp3_has_lyric, save_lyrics
+from extract_lyrics import any_mp3_has_lyric, mp3_has_lyric, save_lyrics
 
 def get_user_folder():
     return os.environ.get('HOMEPATH') or os.environ.get('USERPROFILE')
@@ -122,5 +122,33 @@ if __name__ == "__main__":
                 print(f'    {saved_lyric_file}')
     else:
         print('Zip file was not found.')
+    
+    # process audio files (for single release)
+    print('searching audio file...')
+    exts = ['*.mp3', '*.flac', '*.aac', '*.m4a', '*.ogg', '*.wav', '*.aiff']
+    audio_files = []
+    found_files = [glob.glob(os.path.join(args.search_dir, ext)) for ext in exts]
+    for ff in found_files:
+        audio_files.extend(ff)
+    
+    if audio_files:
+        print(f'{len(audio_files)} audio files was found.')
+        for audio_file in audio_files:
+            audio_basename = os.path.basename(audio_file)
+            artist_name, _ = split_artist_and_album(audio_basename)
+            artist_name = replace_unwanted_artist_name(artist_name)
+            artist_dir = prepare_sub_directory(args.dst_dir, artist_name)
+            print(f'[{audio_basename}]')
+            print(f'  Moving to "{artist_dir}" ... ', end='')
+            moved_path = shutil.move(audio_file, artist_dir)
+            print('OK')
+
+            if mp3_has_lyric(moved_path):
+                print(f'  Some lyrics are found.')
+                saved_lyric_file = save_lyrics(artist_dir)
+                print(f'  Extracted lyrics into file:')
+                print(f'    {saved_lyric_file}')
+    else:
+        print('Audio file was not found.')
 
     print('Done.')
