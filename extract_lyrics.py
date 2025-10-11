@@ -1,7 +1,10 @@
 import glob
+from io import TextIOWrapper
 import os
 from tinytag import TinyTag
 
+
+AUDIO_EXTS = ['.mp3', '.flac', '.aac', '.m4a', '.ogg', '.wav', '.aiff']
 
 def get_lyrics(mp3_file: str) -> str:
     lyric_str = None
@@ -35,7 +38,33 @@ def any_mp3_has_lyric(album_dir: str) -> bool:
     return False
 
 
+def write_lyric_to_file(mp3_file: str, fout: TextIOWrapper, beginning_lfs: bool = True, ending_lfs: bool = True):
+    if beginning_lfs:
+        fout.write('\n\n\n')
+    fout.write(get_track_title(mp3_file) + '\n')
+
+    lyric_str = get_lyrics(mp3_file)
+    if lyric_str:
+        fout.write('\n\n' + lyric_str + '\n')
+    if ending_lfs:
+        fout.write('\n\n\n')
+
+def is_audio_file(filepath: str) -> bool:
+    ext = os.path.splitext(filepath)[1].lower()
+    return ext in AUDIO_EXTS
+
+
 def save_lyrics(album_dir: str, dst_filename_: str = None) -> str:
+    if os.path.isfile(album_dir) and is_audio_file(album_dir):
+        audio_filepath = album_dir
+        album_dir = os.path.dirname(album_dir)
+        audio_filename = os.path.basename(audio_filepath)
+        lyric_filename = os.path.splitext(audio_filename)[0] + '.lyric'
+        dst_filepath = os.path.join(album_dir, lyric_filename)
+        with open(dst_filepath, 'w', encoding='utf-8', newline='\n') as fout:
+            write_lyric_to_file(audio_filepath, fout)
+        return dst_filepath
+    
     mp3_files = glob.glob(os.path.join(album_dir, '*.mp3'))
     
     if not mp3_files:
@@ -48,14 +77,8 @@ def save_lyrics(album_dir: str, dst_filename_: str = None) -> str:
     dst_filepath = os.path.join(album_dir, dst_filename)
 
     with open(dst_filepath, 'w', encoding='utf-8', newline='\n') as fout:
-        fout.write('\n\n\n')
-        for filepath in mp3_files:
-            fout.write(get_track_title(filepath) + '\n')
-            
-            lyric_str = get_lyrics(filepath)
-            if lyric_str:
-                fout.write('\n\n' + lyric_str + '\n')
-            fout.write('\n\n\n')
+        for i, mp3_file in enumerate(mp3_files):
+            write_lyric_to_file(mp3_file, fout, beginning_lfs=(i == 0))
     
     return dst_filepath
 

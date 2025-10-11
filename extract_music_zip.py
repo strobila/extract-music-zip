@@ -6,6 +6,7 @@ import zipfile
 import shutil
 
 from extract_lyrics import any_mp3_has_lyric, mp3_has_lyric, save_lyrics
+from extract_lyrics import AUDIO_EXTS
 
 def get_user_folder():
     return os.environ.get('HOMEPATH') or os.environ.get('USERPROFILE')
@@ -125,9 +126,8 @@ if __name__ == "__main__":
     
     # process audio files (for single release)
     print('searching audio file...')
-    exts = ['*.mp3', '*.flac', '*.aac', '*.m4a', '*.ogg', '*.wav', '*.aiff']
     audio_files = []
-    found_files = [glob.glob(os.path.join(args.search_dir, ext)) for ext in exts]
+    found_files = [glob.glob(os.path.join(args.search_dir, '*' + ext)) for ext in AUDIO_EXTS]
     for ff in found_files:
         audio_files.extend(ff)
     
