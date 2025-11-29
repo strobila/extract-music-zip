@@ -31,8 +31,14 @@ def get_lyrics(audio_file: str) -> str:
     """
     lyric_str = None
     tag = TinyTag.get(audio_file)
-    if hasattr(tag, 'extra') and 'lyrics' in tag.extra:
-        lyric_str = tag.extra['lyrics']
+    if hasattr(tag, 'other'):
+        if 'lyrics' in tag.other:
+            lyric_str = tag.other['lyrics']
+        elif 'unsyncedlyrics' in tag.other:
+            lyric_str = tag.other['unsyncedlyrics']
+        
+        if isinstance(lyric_str, list):
+            lyric_str = lyric_str[0]
 
     return lyric_str
 
@@ -152,11 +158,47 @@ def save_lyrics(album_dir: str, dst_filename: str = None) -> str:
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('album_dir', help='album dir')
+    parser.add_argument('artist_dir', help='artist directory path')
     args = parser.parse_args()
     
-    have_lyric = any_audio_has_lyric(args.album_dir)
-    print(f'Any track has lyric: {have_lyric}')
-
-    fpath = save_lyrics(args.album_dir)
-    print(f'Saved to: {fpath}')
+    artist_dir = args.artist_dir
+    
+    if not os.path.isdir(artist_dir):
+        print(f'Error: {artist_dir} is not a directory')
+        exit(1)
+    
+    # アーティストディレクトリ直下のアルバムディレクトリを列挙
+    album_dirs = [
+        os.path.join(artist_dir, item)
+        for item in os.listdir(artist_dir)
+        if os.path.isdir(os.path.join(artist_dir, item))
+    ]
+    
+    if not album_dirs:
+        print(f'No album directories found in {artist_dir}')
+        exit(0)
+    
+    print(f'Found {len(album_dirs)} album directory(ies)')
+    
+    for album_dir in album_dirs:
+        album_name = os.path.basename(album_dir)
+        
+        # *.lyricファイルの存在チェック
+        lyric_files = glob.glob(os.path.join(album_dir, '*.lyric'))
+        
+        if lyric_files:
+            print(f'[{album_name}] Lyric file already exists, skipping')
+            continue
+        
+        # 歌詞を含むオーディオファイルの存在チェック
+        if any_audio_has_lyric(album_dir):
+            print(f'[{album_name}] Extracting lyrics...')
+            fpath = save_lyrics(album_dir)
+            if fpath:
+                print(f'[{album_name}] Saved to: {os.path.basename(fpath)}')
+            else:
+                print(f'[{album_name}] Failed to save lyrics')
+        else:
+            print(f'[{album_name}] No lyrics found')
+    
+    print('Done.')
