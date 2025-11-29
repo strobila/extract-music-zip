@@ -6,50 +6,65 @@ from tinytag import TinyTag
 
 AUDIO_EXTS = ['.mp3', '.flac', '.aac', '.m4a', '.ogg', '.wav', '.aiff']
 
-def get_lyrics(mp3_file: str) -> str:
+
+def get_audio_files(album_dir: str) -> list[str]:
+    """
+    指定されたディレクトリ内のすべての対応オーディオファイルを取得
+    Parameters:
+        album_dir (str): アルバムディレクトリのパス
+    Returns:
+        list[str]: オーディオファイルのパスのリスト
+    """
+    audio_files = []
+    for ext in AUDIO_EXTS:
+        audio_files.extend(glob.glob(os.path.join(album_dir, f'*{ext}')))
+    return audio_files
+
+
+def get_lyrics(audio_file: str) -> str:
     """
     オーディオファイルのメタデータから歌詞を取得
     Parameters:
-        mp3_file (str): オーディオファイルのパス
+        audio_file (str): オーディオファイルのパス
     Returns:
         str: 歌詞文字列。歌詞がない場合は None を返す
     """
     lyric_str = None
-    tag = TinyTag.get(mp3_file)
+    tag = TinyTag.get(audio_file)
     if hasattr(tag, 'extra') and 'lyrics' in tag.extra:
         lyric_str = tag.extra['lyrics']
 
     return lyric_str
 
 
-def get_track_title(mp3_file: str) -> str:
+def get_track_title(audio_file: str) -> str:
     """
     オーディオファイルのメタデータからトラックタイトルを取得
     Parameters:
-        mp3_file (str): オーディオファイルのパス
+        audio_file (str): オーディオファイルのパス
     Returns:
         str: トラックタイトル文字列。タイトルがない場合は None を返す
     """
     title_str = None
-    tag = TinyTag.get(mp3_file)
+    tag = TinyTag.get(audio_file)
     if hasattr(tag, 'title'):
         title_str = tag.title
     return title_str
 
 
-def mp3_has_lyric(mp3_file: str) -> bool:
+def audio_has_lyric(audio_file: str) -> bool:
     """
     オーディオファイルのメタデータに歌詞が含まれているかを判定
     Parameters:
-        mp3_file (str): オーディオファイルのパス
+        audio_file (str): オーディオファイルのパス
     Returns:
         bool: 歌詞が含まれている場合は True、そうでない場合は False
     """
-    lyric_str = get_lyrics(mp3_file)
+    lyric_str = get_lyrics(audio_file)
     return bool(lyric_str and lyric_str.strip())
 
 
-def any_mp3_has_lyric(album_dir: str) -> bool:
+def any_audio_has_lyric(album_dir: str) -> bool:
     """
     アルバムディレクトリ内のいずれかのトラックに歌詞が含まれているかを判定
     Parameters:
@@ -57,28 +72,28 @@ def any_mp3_has_lyric(album_dir: str) -> bool:
     Returns:
         bool: 歌詞が含まれているトラックがある場合は True、そうでない場合は False
     """
-    mp3_files = glob.glob(os.path.join(album_dir, '*.mp3'))
+    audio_files = get_audio_files(album_dir)
     
-    for filepath in mp3_files:
-        if mp3_has_lyric(filepath):
+    for filepath in audio_files:
+        if audio_has_lyric(filepath):
             return True
     return False
 
 
-def write_lyric_to_file(mp3_file: str, fout: TextIOWrapper, beginning_lfs: bool = True, ending_lfs: bool = True):
+def write_lyric_to_file(audio_file: str, fout: TextIOWrapper, beginning_lfs: bool = True, ending_lfs: bool = True):
     """
     指定されたオーディオファイルの歌詞をファイルに書き込む
     Parameters:
-        mp3_file (str): オーディオファイルのパス
+        audio_file (str): オーディオファイルのパス
         fout (TextIOWrapper): 書き込み先のファイルオブジェクト
         beginning_lfs (bool): 書き込みの前に改行を挿入するかどうか
         ending_lfs (bool): 書き込みの後に改行を挿入するかどうか
     """
     if beginning_lfs:
         fout.write('\n\n\n')
-    fout.write(get_track_title(mp3_file) + '\n')
+    fout.write(get_track_title(audio_file) + '\n')
 
-    lyric_str = get_lyrics(mp3_file)
+    lyric_str = get_lyrics(audio_file)
     if lyric_str:
         fout.write('\n\n' + lyric_str + '\n')
     if ending_lfs:
@@ -116,9 +131,9 @@ def save_lyrics(album_dir: str, dst_filename: str = None) -> str:
             write_lyric_to_file(audio_filepath, fout)
         return dst_filepath
     
-    mp3_files = glob.glob(os.path.join(album_dir, '*.mp3'))
+    audio_files = get_audio_files(album_dir)
     
-    if not mp3_files:
+    if not audio_files:
         return None
     
 
@@ -128,8 +143,8 @@ def save_lyrics(album_dir: str, dst_filename: str = None) -> str:
     dst_filepath = os.path.join(album_dir, dst_filename)
 
     with open(dst_filepath, 'w', encoding='utf-8', newline='\n') as fout:
-        for i, mp3_file in enumerate(mp3_files):
-            write_lyric_to_file(mp3_file, fout, beginning_lfs=(i == 0))
+        for i, audio_file in enumerate(audio_files):
+            write_lyric_to_file(audio_file, fout, beginning_lfs=(i == 0))
     
     return dst_filepath
 
@@ -140,7 +155,7 @@ if __name__ == '__main__':
     parser.add_argument('album_dir', help='album dir')
     args = parser.parse_args()
     
-    have_lyric = any_mp3_has_lyric(args.album_dir)
+    have_lyric = any_audio_has_lyric(args.album_dir)
     print(f'Any track has lyric: {have_lyric}')
 
     fpath = save_lyrics(args.album_dir)

@@ -5,7 +5,7 @@ import glob
 import zipfile
 import shutil
 
-from extract_lyrics import any_mp3_has_lyric, mp3_has_lyric, save_lyrics
+from extract_lyrics import any_audio_has_lyric, audio_has_lyric, save_lyrics, get_audio_files
 from extract_lyrics import AUDIO_EXTS
 
 def get_user_folder():
@@ -92,16 +92,16 @@ if __name__ == "__main__":
             artist_dir = prepare_sub_directory(args.dst_dir, artist_name)
             album_dir = prepare_sub_directory(artist_dir, album_dirname)
 
-            # check if already mp3 files are stored in album_dir,
+            # check if already audio files are stored in album_dir,
             # in order to avoid duplicating processes.
-            already_exist_mp3s = glob.glob(os.path.join(album_dir, '*.mp3'))
-            if already_exist_mp3s:
-                exist_mp3s = [os.path.basename(f) for f in already_exist_mp3s]
+            already_exist_audios = get_audio_files(album_dir)
+            if already_exist_audios:
+                exist_audios = [os.path.basename(f) for f in already_exist_audios]
                 print(f'[WARN] Before Extracting {zip_basename}:')
-                print(f'[WARN]   Some mp3 files are stored in')
-                print(f'[WARN]   desetination album dir: {album_dir}')
+                print(f'[WARN]   Some audio files are stored in')
+                print(f'[WARN]   destination album dir: {album_dir}')
                 print(f'[WARN]   ' + \
-                    '\n[WARN]   '.join(exist_mp3s))
+                    '\n[WARN]   '.join(exist_audios))
                 print('')
                 
                 def you_want_to_extract_anyway() -> bool:
@@ -130,7 +130,7 @@ if __name__ == "__main__":
             shutil.move(zip_file, args.old_dir)
             
             # extract lyrics and save as text file
-            if any_mp3_has_lyric(album_dir):
+            if any_audio_has_lyric(album_dir):
                 print(f'  Some lyrics are found.')
                 saved_lyric_file = save_lyrics(album_dir)
                 print(f'  Extracted lyrics into file:')
@@ -140,10 +140,7 @@ if __name__ == "__main__":
     
     # process audio files (for single release)
     print('searching audio file...')
-    audio_files = []
-    found_files = [glob.glob(os.path.join(args.search_dir, '*' + ext)) for ext in AUDIO_EXTS]
-    for ff in found_files:
-        audio_files.extend(ff)
+    audio_files = get_audio_files(args.search_dir)
     
     if audio_files:
         print(f'{len(audio_files)} audio files was found.')
@@ -157,7 +154,7 @@ if __name__ == "__main__":
             moved_path = shutil.move(audio_file, artist_dir)
             print('OK')
 
-            if mp3_has_lyric(moved_path):
+            if audio_has_lyric(moved_path):
                 print(f'  Some lyrics are found.')
                 saved_lyric_file = save_lyrics(artist_dir)
                 print(f'  Extracted lyrics into file:')
