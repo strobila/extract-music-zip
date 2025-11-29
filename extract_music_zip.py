@@ -26,11 +26,25 @@ def parse_args():
 
 
 def split_artist_and_album(file_path: str):
+    """ファイル名からアーティスト名とアルバム名を分離して取得する
+    Parameters:
+        file_path (str): ファイルのパス
+    Returns:
+        tuple: (artist_name, album_name)
+    """
     file_name = os.path.basename(file_path)
-    stem, ext = os.path.splitext(file_name)
+    stem, _ = os.path.splitext(file_name)
     return stem.split(' - ', maxsplit=1)   # don't care " - " in artist name
 
-def prepare_sub_directory(dst_dir, subdir_name):
+
+def prepare_sub_directory(dst_dir: str, subdir_name: str) -> str:
+    """指定されたディレクトリ内にサブディレクトリを作成し、そのパスを返す
+    Parameters:
+        dst_dir (str): 親ディレクトリのパス
+        subdir_name (str): 作成するサブディレクトリの名前
+    Returns:
+        str: 作成されたサブディレクトリのパス
+    """
     subdir_path = os.path.join(dst_dir, subdir_name)
     if not os.path.isdir(subdir_path):
         os.mkdir(subdir_path)
