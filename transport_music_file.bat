@@ -7,7 +7,7 @@ set SCRIPT_DIR=%~dp0
 :: python仮想環境アクティベート
 :::::::::::::::::::::::::::::::::::::::::::::::
 
-set MY_VENV_DIR=%USEPROFILE%\python_envs
+set MY_VENV_DIR=%USERPROFILE%\python_envs
 set MY_VENV_NAME=env_for_ext_music_zip
 
 call %MY_VENV_DIR%\%MY_VENV_NAME%\Scripts\activate.bat
