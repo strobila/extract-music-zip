@@ -1,5 +1,6 @@
 import argparse
 import os
+import pprint
 from tinytag import TinyTag
 
 
@@ -20,24 +21,25 @@ def show_metadata(audio_file: str):
         print('=' * 80)
         
         # 基本情報
-        print(f'Title:        {tag.title}')
-        print(f'Artist:       {tag.artist}')
-        print(f'Album:        {tag.album}')
-        print(f'Album Artist: {tag.albumartist}')
-        print(f'Track:        {tag.track}')
-        print(f'Disc:         {tag.disc}')
-        print(f'Year:         {tag.year}')
-        print(f'Genre:        {tag.genre}')
-        print(f'Comment:      {tag.comment}')
-        print(f'Composer:     {tag.composer}')
+        pprint.pprint(tag.as_dict())
+        # print(f'Title:        {tag.title}')
+        # print(f'Artist:       {tag.artist}')
+        # print(f'Album:        {tag.album}')
+        # print(f'Album Artist: {tag.albumartist}')
+        # print(f'Track:        {tag.track}')
+        # print(f'Disc:         {tag.disc}')
+        # print(f'Year:         {tag.year}')
+        # print(f'Genre:        {tag.genre}')
+        # print(f'Comment:      {tag.comment}')
+        # print(f'Composer:     {tag.composer}')
         
-        # ファイル情報
-        print()
-        print(f'Duration:     {tag.duration} seconds')
-        print(f'Bitrate:      {tag.bitrate} kBit/s')
-        print(f'Sample Rate:  {tag.samplerate} Hz')
-        print(f'Channels:     {tag.channels}')
-        print(f'File Size:    {tag.filesize} bytes')
+        # # ファイル情報
+        # print()
+        # print(f'Duration:     {tag.duration} seconds')
+        # print(f'Bitrate:      {tag.bitrate} kBit/s')
+        # print(f'Sample Rate:  {tag.samplerate} Hz')
+        # print(f'Channels:     {tag.channels}')
+        # print(f'File Size:    {tag.filesize} bytes')
         
         # 拡張情報（other）
         if hasattr(tag, 'other') and tag.other:
